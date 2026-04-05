@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Twelve Coin Riddle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-1: #06111c;
+      --bg-2: #09232a;
+      --bg-3: #020508;
+      --panel: rgba(7, 16, 24, 0.78);
+      --panel-strong: rgba(10, 20, 30, 0.92);
+      --line: rgba(255, 230, 170, 0.22);
+      --gold: #efcc74;
+      --gold-strong: #ffd98b;
+      --gold-dim: rgba(239, 204, 116, 0.26);
+      --text: #edf3f7;
+      --muted: #9cb3c0;
+      --teal: #49c6bd;
+      --orange: #ff9b54;
+      --balanced: #f6d67e;
+      --danger: #ff7d7d;
+      --shadow: 0 26px 80px rgba(0, 0, 0, 0.4);
+      --radius: 24px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      font-family: "IBM Plex Sans", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 20% 20%, rgba(47, 118, 124, 0.22), transparent 32%),
+        radial-gradient(circle at 80% 10%, rgba(12, 51, 78, 0.38), transparent 28%),
+        radial-gradient(circle at 50% 90%, rgba(29, 63, 53, 0.26), transparent 30%),
+        linear-gradient(135deg, var(--bg-1), var(--bg-2), var(--bg-3));
+      background-size: 170% 170%;
+      animation: auroraShift 18s ease-in-out infinite alternate;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(120deg, rgba(255, 255, 255, 0.03), transparent 20%, transparent 80%, rgba(255, 255, 255, 0.02)),
+        radial-gradient(circle at top, rgba(255, 211, 112, 0.05), transparent 35%);
+      mix-blend-mode: screen;
+      opacity: 0.7;
+    }
+
+    @keyframes auroraShift {
+      0% { background-position: 0% 40%; }
+      50% { background-position: 60% 55%; }
+      100% { background-position: 100% 65%; }
+    }
+
+    @keyframes fadeSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes toastDrop {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -18px);
+      }
+      12%,
+      80% {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(-50%, -8px);
+      }
+    }
+
+    @keyframes coinDrop {
+      0% {
+        transform: translateY(-10px) scale(0.98);
+      }
+      60% {
+        transform: translateY(4px) scale(1.03);
+      }
+      100% {
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .shell {
+      min-height: 100%;
+      padding: 28px 24px 32px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .game {
+      width: min(1180px, 100%);
+      display: grid;
+      gap: 14px;
+    }
+
+    .topbar,
+    .stage,
+    .log-panel,
+    .guess-panel {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01)), var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .topbar {
+      border-radius: 30px;
+      padding: 18px 22px;
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .title-block h1 {
+      margin: 0;
+      font-family: "Cinzel", serif;
+      font-size: clamp(1.9rem, 3vw, 3rem);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+    }
+
+    .title-block p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      max-width: 62ch;
+      line-height: 1.45;
+      font-size: 0.98rem;
+    }
+
+    .status-cluster {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .weighing-pips {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .pip {
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 35% 35%, #fff8da, var(--gold) 38%, #9d7330 100%);
+      box-shadow: 0 0 12px rgba(239, 204, 116, 0.6);
+      transition: opacity 0.3s ease, transform 0.3s ease, filter 0.3s ease;
+    }
+
+    .pip.used {
+      opacity: 0.2;
+      filter: saturate(0.2);
+      transform: scale(0.92);
+      box-shadow: none;
+    }
+
+    .counter-label {
+      font-family: "IBM Plex Mono", monospace;
+      color: var(--muted);
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .secondary-btn,
+    .primary-btn {
+      border-radius: 999px;
+      padding: 12px 18px;
+      transition: transform 0.22s ease, box-shadow 0.22s ease, opacity 0.22s ease;
+    }
+
+    .secondary-btn {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .secondary-btn:hover,
+    .primary-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+    }
+
+    .primary-btn {
+      background: radial-gradient(circle at top, #ffe8aa, #f0c86b 42%, #ab7a26 100%);
+      color: #231607;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      box-shadow:
+        0 0 0 1px rgba(255, 230, 170, 0.24),
+        0 0 28px rgba(239, 204, 116, 0.35),
+        inset 0 2px 4px rgba(255, 248, 221, 0.7);
+    }
+
+    .primary-btn:disabled {
+      opacity: 0.38;
+      cursor: not-allowed;
+      box-shadow: none;
+      filter: grayscale(0.3);
+    }
+
+    .stage {
+      position: relative;
+      border-radius: 32px;
+      padding: 16px;
+      overflow: hidden;
+    }
+
+    .tray-zone,
+    .logic-panel,
+    .logic-zone,
+    .drop-zone,
+    .guess-panel,
+    .log-panel {
+      border-radius: var(--radius);
+    }
+
+    .tray-zone,
+    .logic-panel,
+    .logic-zone {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(10, 14, 18, 0.32));
+      padding: 18px;
+      min-height: 102px;
+    }
+
+    .zone-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+
+    .zone-header h2,
+    .scale-caption,
+    .guess-panel h2,
+    .log-panel h2 {
+      margin: 0;
+      font-family: "Cinzel", serif;
+      font-size: 1.1rem;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .zone-header span,
+    .scale-caption small,
+    .helper-text {
+      color: var(--muted);
+      font-size: 0.87rem;
+    }
+
+    .coin-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      min-height: 56px;
+    }
+
+    .coin {
+      --coin-top: #ffffff;
+      --coin-mid: #999999;
+      --coin-deep: #222222;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background:
+        radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.18) 18%, transparent 19%),
+        radial-gradient(circle at 34% 30%, var(--coin-top), var(--coin-mid) 48%, var(--coin-deep) 100%);
+      box-shadow:
+        inset 0 2px 4px rgba(255, 255, 255, 0.3),
+        inset 0 -6px 10px rgba(0, 0, 0, 0.25),
+        0 14px 18px rgba(0, 0, 0, 0.26);
+      color: rgba(255, 255, 255, 0.92);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "Cinzel", serif;
+      font-weight: 700;
+      font-size: 1.06rem;
+      letter-spacing: 0.04em;
+      user-select: none;
+      cursor: grab;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+      position: relative;
+    }
+
+    .coin::after {
+      content: "";
+      position: absolute;
+      inset: 5px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      opacity: 0.55;
+    }
+
+    .coin:hover {
+      transform: translateY(-4px);
+      box-shadow:
+        inset 0 2px 4px rgba(255, 255, 255, 0.34),
+        inset 0 -7px 12px rgba(0, 0, 0, 0.28),
+        0 18px 28px rgba(0, 0, 0, 0.34);
+      filter: saturate(1.08);
+    }
+
+    .coin:active {
+      cursor: grabbing;
+    }
+
+    .coin.dragging {
+      opacity: 0.3;
+      transform: scale(0.96);
+    }
+
+    .coin.selected {
+      transform: translateY(-4px) scale(1.06);
+      box-shadow:
+        inset 0 2px 4px rgba(255, 255, 255, 0.36),
+        inset 0 -7px 12px rgba(0, 0, 0, 0.28),
+        0 0 0 3px rgba(255, 217, 139, 0.42),
+        0 18px 28px rgba(0, 0, 0, 0.34);
+      filter: saturate(1.1);
+    }
+
+    .coin.drop-pop {
+      animation: coinDrop 0.34s ease-out;
+    }
+
+    .scale-board {
+      margin-top: 8px;
+      display: grid;
+      gap: 10px;
+      position: relative;
+      min-height: 470px;
+      grid-template-columns: 1fr;
+      align-items: start;
+    }
+
+    .scale-caption {
+      text-align: center;
+      display: grid;
+      gap: 6px;
+      justify-items: center;
+    }
+
+    .scale-caption small {
+      max-width: 46ch;
+      line-height: 1.4;
+    }
+
+    .result-banner {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      min-height: 40px;
+      font-family: "Cinzel", serif;
+      letter-spacing: 0.06em;
+      color: var(--gold-strong);
+      text-transform: uppercase;
+      font-size: 1rem;
+      text-align: center;
+    }
+
+    .result-banner.hidden {
+      visibility: hidden;
+    }
+
+    .result-banner .outcome-pill {
+      min-width: 0;
+      font-size: 0.96rem;
+      padding: 10px 16px;
+    }
+
+    .scale-wrap {
+      position: relative;
+      width: 100%;
+      min-height: 350px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      isolation: isolate;
+    }
+
+    .scale-svg {
+      width: min(860px, 100%);
+      height: auto;
+      overflow: visible;
+      filter: drop-shadow(0 26px 30px rgba(0, 0, 0, 0.4));
+    }
+
+    #scale-arm {
+      transform-box: view-box;
+      transform-origin: 400px 112px;
+      transition: transform 1.3s cubic-bezier(0.34, 1.3, 0.64, 1);
+    }
+
+    .drop-zone {
+      position: absolute;
+      inset: 0 auto 0 0;
+      padding: 18px 18px 42px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      pointer-events: auto;
+      border: 1px dashed rgba(255, 217, 139, 0.15);
+      background: rgba(255, 255, 255, 0.015);
+      transition: border-color 0.22s ease, background 0.22s ease, box-shadow 0.22s ease;
+    }
+
+    .drop-zone .coin-grid {
+      justify-content: center;
+      gap: 10px;
+      width: min(280px, 92%);
+      align-content: flex-end;
+      min-height: 96px;
+      position: relative;
+      z-index: 2;
+    }
+
+    #leftZone {
+      left: 0;
+      width: 50%;
+    }
+
+    #rightZone {
+      left: 50%;
+      width: 50%;
+    }
+
+    .drop-zone.active,
+    .tray-zone.active,
+    .logic-zone.active {
+      border-color: rgba(255, 217, 139, 0.7);
+      background: rgba(255, 217, 139, 0.08);
+      box-shadow: 0 0 0 1px rgba(255, 217, 139, 0.14), 0 0 24px rgba(255, 217, 139, 0.12);
+    }
+
+    .logic-panel {
+      display: grid;
+      gap: 10px;
+    }
+
+    .logic-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .logic-zone h3 {
+      margin: 0 0 8px;
+      font-family: "Cinzel", serif;
+      font-size: 1rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .zone-topline {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .return-btn {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 0.84rem;
+      letter-spacing: 0.03em;
+    }
+
+    .return-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+
+    .return-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .weigh-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: -2px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .weigh-status {
+      font-family: "IBM Plex Mono", monospace;
+      color: var(--muted);
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
+      text-align: center;
+      min-height: 1.3em;
+    }
+
+    .tap-tip {
+      display: none;
+      text-align: center;
+      color: rgba(255, 217, 139, 0.88);
+      font-size: 0.86rem;
+      letter-spacing: 0.03em;
+    }
+
+    .log-panel,
+    .guess-panel {
+      padding: 18px 20px;
+    }
+
+    .log-panel {
+      display: grid;
+      gap: 16px;
+    }
+
+    .log-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .log-entry {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 16px;
+      align-items: center;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      animation: fadeSlideIn 0.45s ease both;
+    }
+
+    .log-index {
+      font-family: "IBM Plex Mono", monospace;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .log-matchup {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .log-coins {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-height: 24px;
+      align-items: center;
+    }
+
+    .mini-coin {
+      min-width: 28px;
+      height: 28px;
+      padding: 0 8px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.26);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255, 255, 255, 0.94);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    .versus {
+      font-family: "Cinzel", serif;
+      color: rgba(255, 255, 255, 0.5);
+      letter-spacing: 0.08em;
+    }
+
+    .outcome-pill {
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.86rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-align: center;
+      min-width: 144px;
+    }
+
+    .outcome-left {
+      color: #281004;
+      background: rgba(255, 155, 84, 0.92);
+    }
+
+    .outcome-right {
+      color: #041c1a;
+      background: rgba(73, 198, 189, 0.92);
+    }
+
+    .outcome-balanced {
+      color: #2d2308;
+      background: rgba(246, 214, 126, 0.92);
+    }
+
+    .guess-panel {
+      display: none;
+      gap: 16px;
+    }
+
+    .guess-panel.visible {
+      display: grid;
+      animation: fadeSlideIn 0.45s ease both;
+    }
+
+    .guess-controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .guess-controls select {
+      appearance: none;
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(4, 9, 14, 0.9);
+      color: var(--text);
+      font: inherit;
+      min-width: 170px;
+    }
+
+    .radio-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .radio-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.04);
+      cursor: pointer;
+    }
+
+    .radio-chip input {
+      accent-color: var(--gold);
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      top: 18px;
+      transform: translateX(-50%);
+      z-index: 20;
+      padding: 13px 18px;
+      border-radius: 999px;
+      background: rgba(7, 17, 25, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 24px 44px rgba(0, 0, 0, 0.34);
+      min-width: 240px;
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      animation: toastDrop 3s ease forwards;
+    }
+
+    .result-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.58);
+      backdrop-filter: blur(7px);
+      display: none;
+      place-items: center;
+      padding: 24px;
+      z-index: 30;
+    }
+
+    .result-overlay.visible {
+      display: grid;
+    }
+
+    .result-card {
+      width: min(520px, 100%);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(7, 14, 20, 0.96));
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+      text-align: center;
+      display: grid;
+      gap: 14px;
+    }
+
+    .result-card h2 {
+      margin: 0;
+      font-family: "Cinzel", serif;
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      letter-spacing: 0.08em;
+    }
+
+    .result-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .result-highlight {
+      color: var(--gold-strong);
+      font-weight: 600;
+    }
+
+    .empty-note {
+      color: rgba(156, 179, 192, 0.75);
+      font-size: 0.92rem;
+    }
+
+    @media (max-width: 980px) {
+      .shell {
+        padding: 18px 16px 24px;
+      }
+
+      .topbar {
+        grid-template-columns: 1fr;
+        justify-items: start;
+        gap: 12px;
+        padding: 16px 18px;
+      }
+
+      .status-cluster {
+        justify-content: flex-start;
+      }
+
+      .scale-board {
+        min-height: 400px;
+      }
+
+      .drop-zone {
+        padding: 12px 10px 22px;
+      }
+
+      .drop-zone .coin-grid {
+        width: min(220px, 96%);
+        min-height: 82px;
+      }
+
+      .coin {
+        width: 50px;
+        height: 50px;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .shell {
+        padding: 10px;
+      }
+
+      .stage {
+        padding: 12px;
+      }
+
+      .tray-zone,
+      .logic-panel,
+      .logic-zone,
+      .log-panel,
+      .guess-panel {
+        padding: 14px;
+      }
+
+      .zone-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+      }
+
+      .topbar {
+        border-radius: 24px;
+      }
+
+      .title-block h1 {
+        font-size: clamp(1.45rem, 7vw, 2.1rem);
+      }
+
+      .scale-wrap {
+        min-height: 260px;
+      }
+
+      .scale-svg {
+        width: min(720px, 132%);
+      }
+
+      .drop-zone {
+        padding: 10px 8px 14px;
+      }
+
+      .drop-zone .coin-grid {
+        width: min(160px, 96%);
+        min-height: 64px;
+        gap: 8px;
+      }
+
+      .coin {
+        width: 44px;
+        height: 44px;
+        font-size: 0.96rem;
+      }
+
+      .weigh-controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .weigh-controls .primary-btn,
+      .weigh-controls .return-btn,
+      .guess-controls select,
+      .guess-controls button {
+        width: 100%;
+      }
+
+      .tap-tip {
+        display: block;
+      }
+
+      .log-entry {
+        grid-template-columns: 1fr;
+      }
+
+      .log-matchup {
+        grid-template-columns: 1fr;
+      }
+
+      .guess-controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .radio-group {
+        flex-direction: column;
+      }
+
+      .logic-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <div class="result-overlay" id="resultOverlay" aria-hidden="true">
+    <div class="result-card">
+      <h2 id="resultTitle"></h2>
+      <p id="resultBody"></p>
+      <button class="primary-btn" id="playAgainBtn">Play Again</button>
+    </div>
+  </div>
+
+  <div class="shell">
+    <main class="game">
+      <section class="topbar">
+        <div class="title-block">
+          <h1>The Twelve Coin Riddle</h1>
+          <p>One coin is false, and it might be heavier or lighter than the rest. You have exactly three weighings to solve the puzzle, then one final guess.</p>
+        </div>
+
+        <div class="status-cluster">
+          <div>
+            <div class="counter-label">Weighings Remaining</div>
+            <div class="weighing-pips" id="weighingPips" aria-label="Weighings remaining"></div>
+          </div>
+        </div>
+
+        <button class="secondary-btn" id="newGameBtn">New Game</button>
+      </section>
+
+      <section class="stage">
+        <section class="tray-zone zone" data-zone="tray">
+          <div class="zone-header">
+            <h2>Main Tray</h2>
+            <span>All twelve begin here</span>
+          </div>
+          <div class="coin-grid" id="trayCoins"></div>
+        </section>
+
+        <section class="scale-board">
+          <div class="scale-caption">
+            <h2>Balance Scale</h2>
+            <small>Drag equal numbers of coins onto each pan. Coins stay in place after each weighing so you can reason through the evidence.</small>
+          </div>
+          <div class="tap-tip" id="tapTip">On phones and tablets: tap a coin, then tap the tray, a pan, or a logic zone.</div>
+          <div class="result-banner hidden" id="resultBanner" aria-live="polite"></div>
+          <div class="weigh-controls">
+            <button class="return-btn" id="returnScaleBtn">Return Balls From Scale</button>
+            <button class="primary-btn" id="weighBtn" disabled>Weigh</button>
+          </div>
+
+          <div class="scale-wrap" id="scaleWrap">
+            <svg class="scale-svg" id="scaleSvg" viewBox="0 0 800 430" aria-label="Balance scale illustration">
+              <defs>
+                <linearGradient id="pillarWood" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#815625"/>
+                  <stop offset="35%" stop-color="#5b3918"/>
+                  <stop offset="100%" stop-color="#2a1709"/>
+                </linearGradient>
+                <linearGradient id="brass" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#ffefbb"/>
+                  <stop offset="40%" stop-color="#e0b85e"/>
+                  <stop offset="100%" stop-color="#7b5320"/>
+                </linearGradient>
+                <linearGradient id="dish" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#f8da8b"/>
+                  <stop offset="100%" stop-color="#8b6327"/>
+                </linearGradient>
+              </defs>
+
+              <g opacity="0.22">
+                <ellipse cx="400" cy="396" rx="180" ry="18" fill="#000"/>
+              </g>
+
+              <g id="scale-base">
+                <path d="M250 390 H550 Q540 350 500 350 H300 Q260 350 250 390 Z" fill="url(#pillarWood)" stroke="#a06e2f" stroke-width="4"/>
+                <rect x="372" y="132" width="56" height="222" rx="18" fill="url(#pillarWood)" stroke="#9d6a2f" stroke-width="4"/>
+                <path d="M350 152 C365 110 435 110 450 152" fill="none" stroke="url(#brass)" stroke-width="10" stroke-linecap="round"/>
+                <circle cx="400" cy="112" r="22" fill="url(#brass)" stroke="#ffefbb" stroke-width="4"/>
+                <circle cx="400" cy="112" r="8" fill="#fff6d4" opacity="0.75"/>
+              </g>
+
+              <g id="scale-arm">
+                <rect x="178" y="102" width="444" height="20" rx="10" fill="url(#brass)" stroke="#ffedbf" stroke-width="3"/>
+                <path d="M400 92 L388 106 H412 Z" fill="#f1d182"/>
+
+                <g id="left-hanger">
+                  <line x1="220" y1="112" x2="190" y2="208" stroke="#d9b56a" stroke-width="4" />
+                  <line x1="220" y1="112" x2="250" y2="208" stroke="#d9b56a" stroke-width="4" />
+                  <line x1="190" y1="208" x2="250" y2="208" stroke="#d9b56a" stroke-width="4" />
+                  <path id="left-pan-anchor" d="M166 214 Q220 274 274 214 L262 258 Q220 284 178 258 Z" fill="url(#dish)" stroke="#ffefbc" stroke-width="4"/>
+                </g>
+
+                <g id="right-hanger">
+                  <line x1="580" y1="112" x2="550" y2="208" stroke="#d9b56a" stroke-width="4" />
+                  <line x1="580" y1="112" x2="610" y2="208" stroke="#d9b56a" stroke-width="4" />
+                  <line x1="550" y1="208" x2="610" y2="208" stroke="#d9b56a" stroke-width="4" />
+                  <path id="right-pan-anchor" d="M526 214 Q580 274 634 214 L622 258 Q580 284 538 258 Z" fill="url(#dish)" stroke="#ffefbc" stroke-width="4"/>
+                </g>
+              </g>
+            </svg>
+
+            <div class="drop-zone zone" id="leftZone" data-zone="left" aria-label="Left pan">
+              <div class="coin-grid" id="leftCoins"></div>
+            </div>
+            <div class="drop-zone zone" id="rightZone" data-zone="right" aria-label="Right pan">
+              <div class="coin-grid" id="rightCoins"></div>
+            </div>
+          </div>
+          <div class="weigh-status" id="weighHint">Place an equal, non-zero number of coins on each pan.</div>
+        </section>
+
+        <section class="logic-panel">
+          <div class="zone-header">
+            <h2>Logic Areas</h2>
+            <span>Zones to set things aside while you reason it out</span>
+          </div>
+          <div class="logic-grid">
+            <section class="logic-zone zone" data-zone="aside1">
+              <div class="zone-topline">
+                <h3>Zone 1</h3>
+                <button class="return-btn" id="returnZone1Btn">Return Balls</button>
+              </div>
+              <div class="coin-grid" id="aside1Coins"></div>
+            </section>
+            <section class="logic-zone zone" data-zone="aside2">
+              <div class="zone-topline">
+                <h3>Zone 2</h3>
+                <button class="return-btn" id="returnZone2Btn">Return Balls</button>
+              </div>
+              <div class="coin-grid" id="aside2Coins"></div>
+            </section>
+          </div>
+        </section>
+      </section>
+
+      <section class="guess-panel" id="guessPanel">
+        <div>
+          <h2>Final Guess</h2>
+          <p class="helper-text">Three weighings are spent. Name the fake coin and decide whether it is heavier or lighter.</p>
+        </div>
+        <div class="guess-controls">
+          <select id="guessCoin" aria-label="Select the fake coin"></select>
+          <div class="radio-group">
+            <label class="radio-chip"><input type="radio" name="guessWeight" value="heavier" checked> Heavier</label>
+            <label class="radio-chip"><input type="radio" name="guessWeight" value="lighter"> Lighter</label>
+          </div>
+          <button class="primary-btn" id="submitGuessBtn">Submit Guess</button>
+        </div>
+      </section>
+
+      <section class="log-panel">
+        <div class="zone-header">
+          <h2>Weighing Log</h2>
+          <span>Every clue stays visible</span>
+        </div>
+        <div class="log-list" id="logList">
+          <div class="empty-note">No weighings yet. The first comparison will appear here.</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const coinThemes = [
+      { label: "Gold", top: "#fff3b4", mid: "#c6973b", deep: "#6f4718" },
+      { label: "Silver", top: "#f3fbff", mid: "#b9c4d2", deep: "#5c6978" },
+      { label: "Copper", top: "#ffd0ad", mid: "#b56a3e", deep: "#64331d" },
+      { label: "Jade", top: "#cbffe4", mid: "#3ea478", deep: "#14543b" },
+      { label: "Lapis", top: "#d5e5ff", mid: "#496ebc", deep: "#1a2f73" },
+      { label: "Amethyst", top: "#f0d8ff", mid: "#8a57c5", deep: "#42205f" },
+      { label: "Ruby", top: "#ffd6e0", mid: "#b73d63", deep: "#60162b" },
+      { label: "Onyx", top: "#d8dde4", mid: "#434c58", deep: "#080b10" },
+      { label: "Teal", top: "#cbfffb", mid: "#258f93", deep: "#0d4a4d" },
+      { label: "Amber", top: "#ffe6ba", mid: "#c87d23", deep: "#6a3504" },
+      { label: "Rose", top: "#ffe1eb", mid: "#c26a92", deep: "#672b44" },
+      { label: "Moss", top: "#e3f1c5", mid: "#6d9245", deep: "#334a1f" }
+    ];
+
+    const zoneElements = {
+      tray: document.getElementById("trayCoins"),
+      left: document.getElementById("leftCoins"),
+      right: document.getElementById("rightCoins"),
+      aside1: document.getElementById("aside1Coins"),
+      aside2: document.getElementById("aside2Coins")
+    };
+
+    const zoneShells = {
+      tray: document.querySelector('[data-zone="tray"]'),
+      left: document.getElementById("leftZone"),
+      right: document.getElementById("rightZone"),
+      aside1: document.querySelector('[data-zone="aside1"]'),
+      aside2: document.querySelector('[data-zone="aside2"]')
+    };
+
+    const state = {
+      zones: { tray: [], left: [], right: [], aside1: [], aside2: [] },
+      fakeCoin: 1,
+      fakeDirection: "heavier",
+      weighingsUsed: 0,
+      log: [],
+      draggingCoinId: null,
+      dragOriginZone: null,
+      dropHandled: false,
+      selectedCoinId: null,
+      isAnimating: false,
+      panSyncFrame: null,
+      gameOver: false
+    };
+
+    const weighingPips = document.getElementById("weighingPips");
+    const weighBtn = document.getElementById("weighBtn");
+    const returnScaleBtn = document.getElementById("returnScaleBtn");
+    const returnZone1Btn = document.getElementById("returnZone1Btn");
+    const returnZone2Btn = document.getElementById("returnZone2Btn");
+    const weighHint = document.getElementById("weighHint");
+    const logList = document.getElementById("logList");
+    const guessPanel = document.getElementById("guessPanel");
+    const guessCoin = document.getElementById("guessCoin");
+    const submitGuessBtn = document.getElementById("submitGuessBtn");
+    const tapTip = document.getElementById("tapTip");
+    const scaleArm = document.getElementById("scale-arm");
+    const scaleWrap = document.getElementById("scaleWrap");
+    const scaleSvg = document.getElementById("scaleSvg");
+    const toast = document.getElementById("toast");
+    const resultBanner = document.getElementById("resultBanner");
+    const resultOverlay = document.getElementById("resultOverlay");
+    const resultTitle = document.getElementById("resultTitle");
+    const resultBody = document.getElementById("resultBody");
+    const leftPanAnchor = document.getElementById("left-pan-anchor");
+    const rightPanAnchor = document.getElementById("right-pan-anchor");
+
+    function createCoin(id, theme) {
+      const coin = document.createElement("div");
+      coin.className = "coin";
+      coin.draggable = true;
+      coin.dataset.coinId = String(id);
+      coin.style.setProperty("--coin-top", theme.top);
+      coin.style.setProperty("--coin-mid", theme.mid);
+      coin.style.setProperty("--coin-deep", theme.deep);
+      coin.title = `Coin ${id} • ${theme.label}`;
+      coin.setAttribute("aria-label", `Coin ${id}`);
+      coin.textContent = id;
+
+      coin.addEventListener("dragstart", handleDragStart);
+      coin.addEventListener("dragend", handleDragEnd);
+      coin.addEventListener("click", handleCoinTap);
+      return coin;
+    }
+
+    function buildGuessOptions() {
+      guessCoin.innerHTML = "";
+      for (let i = 1; i <= 12; i += 1) {
+        const option = document.createElement("option");
+        option.value = String(i);
+        option.textContent = `Coin ${i}`;
+        guessCoin.appendChild(option);
+      }
+    }
+
+    function renderPips() {
+      weighingPips.innerHTML = "";
+      for (let i = 0; i < 3; i += 1) {
+        const pip = document.createElement("span");
+        pip.className = `pip${i < state.weighingsUsed ? " used" : ""}`;
+        weighingPips.appendChild(pip);
+      }
+    }
+
+    function currentZoneForCoin(coinId) {
+      return Object.keys(state.zones).find((zone) => state.zones[zone].includes(coinId));
+    }
+
+    function renderZones(animateCoinId = null) {
+      Object.entries(zoneElements).forEach(([zone, container]) => {
+        container.innerHTML = "";
+        state.zones[zone].forEach((coinId) => {
+          const coin = createCoin(coinId, coinThemes[coinId - 1]);
+          if (coinId === state.selectedCoinId) {
+            coin.classList.add("selected");
+          }
+          if (coinId === animateCoinId) {
+            coin.classList.add("drop-pop");
+            coin.addEventListener("animationend", () => coin.classList.remove("drop-pop"), { once: true });
+          }
+          container.appendChild(coin);
+        });
+      });
+      updateWeighButtonState();
+    }
+
+    function setScaleTilt(direction) {
+      const angle = direction === "left" ? -14 : direction === "right" ? 14 : 0;
+      scaleArm.style.transform = `rotate(${angle}deg)`;
+      requestAnimationFrame(positionPanZones);
+    }
+
+    function renderScaleOutcome(outcome) {
+      if (!outcome) {
+        resultBanner.className = "result-banner hidden";
+        resultBanner.innerHTML = "";
+        return;
+      }
+      const outcomeClass = outcome === "left" ? "outcome-left" : outcome === "right" ? "outcome-right" : "outcome-balanced";
+      resultBanner.className = "result-banner";
+      resultBanner.innerHTML = `<span class="outcome-pill ${outcomeClass}">${outcomeLabel(outcome)}</span>`;
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.remove("show");
+      void toast.offsetWidth;
+      toast.classList.add("show");
+    }
+
+    function clearZoneHighlights() {
+      Object.values(zoneShells).forEach((zone) => zone.classList.remove("active"));
+    }
+
+    function clearCoinSelection() {
+      if (state.selectedCoinId === null) {
+        return;
+      }
+      state.selectedCoinId = null;
+      renderZones();
+    }
+
+    function handleCoinTap(event) {
+      if (state.isAnimating || state.gameOver) {
+        return;
+      }
+      const coinId = Number(event.currentTarget.dataset.coinId);
+      state.selectedCoinId = state.selectedCoinId === coinId ? null : coinId;
+      renderZones();
+    }
+
+    function handleDragStart(event) {
+      if (state.isAnimating || state.gameOver) {
+        event.preventDefault();
+        return;
+      }
+      state.draggingCoinId = Number(event.target.dataset.coinId);
+      state.dragOriginZone = currentZoneForCoin(state.draggingCoinId);
+      state.dropHandled = false;
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", String(state.draggingCoinId));
+      event.target.classList.add("dragging");
+    }
+
+    function handleDragEnd(event) {
+      const coinId = state.draggingCoinId;
+      event.target.classList.remove("dragging");
+      if (!state.dropHandled && coinId) {
+        moveCoinToZone(coinId, "tray");
+      }
+      state.draggingCoinId = null;
+      state.dragOriginZone = null;
+      state.dropHandled = false;
+      clearZoneHighlights();
+    }
+
+    function registerZoneEvents() {
+      Object.entries(zoneShells).forEach(([zoneName, zone]) => {
+        zone.addEventListener("click", (event) => {
+          if (!state.selectedCoinId || state.isAnimating || state.gameOver) {
+            return;
+          }
+          if (event.target.closest(".coin") || event.target.closest("button") || event.target.closest("input") || event.target.closest("select")) {
+            return;
+          }
+          moveCoinToZone(state.selectedCoinId, zoneName);
+        });
+
+        zone.addEventListener("dragover", (event) => {
+          if (state.isAnimating || state.gameOver || !state.draggingCoinId) {
+            return;
+          }
+          event.preventDefault();
+          zone.classList.add("active");
+        });
+
+        zone.addEventListener("dragleave", () => {
+          zone.classList.remove("active");
+        });
+
+        zone.addEventListener("drop", (event) => {
+          if (state.isAnimating || state.gameOver) {
+            return;
+          }
+          event.preventDefault();
+          const coinId = Number(event.dataTransfer.getData("text/plain") || state.draggingCoinId);
+          if (!coinId) {
+            clearZoneHighlights();
+            return;
+          }
+          state.dropHandled = true;
+          moveCoinToZone(coinId, zoneName);
+          clearZoneHighlights();
+        });
+      });
+    }
+
+    function moveCoinToZone(coinId, targetZone) {
+      const originZone = currentZoneForCoin(coinId);
+      if (!originZone || originZone === targetZone) {
+        return;
+      }
+      state.zones[originZone] = state.zones[originZone].filter((id) => id !== coinId);
+      state.zones[targetZone].push(coinId);
+      if (state.selectedCoinId === coinId) {
+        state.selectedCoinId = null;
+      }
+      renderZones(coinId);
+      positionPanZones();
+    }
+
+    function returnZoneToTray(zoneName) {
+      if (state.isAnimating || state.gameOver) {
+        return;
+      }
+      const coins = [...state.zones[zoneName]];
+      if (!coins.length) {
+        return;
+      }
+      state.zones[zoneName] = [];
+      state.zones.tray.push(...coins);
+      if (coins.includes(state.selectedCoinId)) {
+        state.selectedCoinId = null;
+      }
+      renderZones();
+      positionPanZones();
+    }
+
+    function returnScaleToTray() {
+      if (state.isAnimating || state.gameOver) {
+        return;
+      }
+      const coins = [...state.zones.left, ...state.zones.right];
+      if (!coins.length) {
+        return;
+      }
+      state.zones.left = [];
+      state.zones.right = [];
+      state.zones.tray.push(...coins);
+      if (coins.includes(state.selectedCoinId)) {
+        state.selectedCoinId = null;
+      }
+      renderZones();
+      positionPanZones();
+    }
+
+    function computeOutcome() {
+      const left = state.zones.left;
+      const right = state.zones.right;
+      const weightOfCoin = (coinId) => {
+        if (coinId !== state.fakeCoin) {
+          return 0;
+        }
+        return state.fakeDirection === "heavier" ? 1 : -1;
+      };
+      const leftWeight = left.reduce((sum, id) => sum + weightOfCoin(id), 0);
+      const rightWeight = right.reduce((sum, id) => sum + weightOfCoin(id), 0);
+
+      if (leftWeight > rightWeight) {
+        return "left";
+      }
+      if (rightWeight > leftWeight) {
+        return "right";
+      }
+      return "balanced";
+    }
+
+    function outcomeLabel(outcome) {
+      if (outcome === "left") {
+        return "Left side is heavier";
+      }
+      if (outcome === "right") {
+        return "Right side is heavier";
+      }
+      return "Balanced";
+    }
+
+    function updateWeighButtonState() {
+      returnScaleBtn.disabled = state.isAnimating || state.gameOver || (state.zones.left.length + state.zones.right.length === 0);
+      returnZone1Btn.disabled = state.isAnimating || state.gameOver || state.zones.aside1.length === 0;
+      returnZone2Btn.disabled = state.isAnimating || state.gameOver || state.zones.aside2.length === 0;
+      if (state.gameOver) {
+        weighBtn.disabled = true;
+        weighHint.textContent = "The round is finished. Start a new game to weigh again.";
+        return;
+      }
+      if (state.weighingsUsed >= 3) {
+        weighBtn.disabled = true;
+        weighHint.textContent = "All weighings spent. Make your final guess.";
+        return;
+      }
+      const leftCount = state.zones.left.length;
+      const rightCount = state.zones.right.length;
+      const valid = leftCount > 0 && leftCount === rightCount && !state.isAnimating;
+      weighBtn.disabled = !valid;
+      if (state.isAnimating) {
+        weighHint.textContent = "The scale is settling...";
+      } else if (state.selectedCoinId && window.matchMedia("(hover: none), (pointer: coarse)").matches) {
+        weighHint.textContent = `Coin ${state.selectedCoinId} selected. Tap a destination zone to move it.`;
+      } else if (leftCount === 0 && rightCount === 0) {
+        weighHint.textContent = "Place an equal, non-zero number of coins on each pan.";
+      } else if (leftCount !== rightCount) {
+        weighHint.textContent = "Both pans must hold the same number of coins.";
+      } else {
+        weighHint.textContent = "The balance is ready. Commit this weighing when you are sure.";
+      }
+    }
+
+    function renderLog() {
+      logList.innerHTML = "";
+      if (!state.log.length) {
+        logList.innerHTML = '<div class="empty-note">No weighings yet. The first comparison will appear here.</div>';
+        return;
+      }
+
+      state.log.forEach((entry) => {
+        const wrapper = document.createElement("div");
+        wrapper.className = "log-entry";
+        wrapper.innerHTML = `
+          <div class="log-index">Weigh ${entry.index}</div>
+          <div class="log-matchup">
+            <div class="log-coins">${entry.left.map((id) => miniCoinMarkup(id)).join("")}</div>
+            <div class="versus">vs</div>
+            <div class="log-coins">${entry.right.map((id) => miniCoinMarkup(id)).join("")}</div>
+          </div>
+          <div class="outcome-pill ${entry.outcomeClass}">${entry.outcomeText}</div>
+        `;
+        logList.appendChild(wrapper);
+      });
+    }
+
+    function miniCoinMarkup(coinId) {
+      const theme = coinThemes[coinId - 1];
+      return `<span class="mini-coin" title="Coin ${coinId}" style="background: radial-gradient(circle at 32% 28%, rgba(255,255,255,0.8), rgba(255,255,255,0.16) 18%, transparent 19%), radial-gradient(circle at 34% 30%, ${theme.top}, ${theme.mid} 48%, ${theme.deep} 100%);">${coinId}</span>`;
+    }
+
+    function recordWeighing(outcome) {
+      state.log.push({
+        index: state.weighingsUsed,
+        left: [...state.zones.left],
+        right: [...state.zones.right],
+        outcomeText: outcomeLabel(outcome),
+        outcomeClass: outcome === "left" ? "outcome-left" : outcome === "right" ? "outcome-right" : "outcome-balanced"
+      });
+      renderLog();
+    }
+
+    function beginGuessPhaseIfNeeded() {
+      if (state.weighingsUsed >= 3) {
+        guessPanel.classList.add("visible");
+        updateWeighButtonState();
+      }
+    }
+
+    function weighCoins() {
+      if (weighBtn.disabled || state.isAnimating || state.gameOver) {
+        return;
+      }
+      const leftCount = state.zones.left.length;
+      const rightCount = state.zones.right.length;
+      if (!(leftCount > 0 && leftCount === rightCount)) {
+        updateWeighButtonState();
+        return;
+      }
+
+      state.isAnimating = true;
+      state.weighingsUsed += 1;
+      renderPips();
+      updateWeighButtonState();
+
+      const outcome = computeOutcome();
+      setScaleTilt(outcome);
+      renderScaleOutcome(outcome);
+      syncPanZonesDuringTilt();
+      showToast(outcomeLabel(outcome));
+      recordWeighing(outcome);
+
+      window.setTimeout(() => {
+        state.isAnimating = false;
+        stopPanZoneSync();
+        positionPanZones();
+        updateWeighButtonState();
+        beginGuessPhaseIfNeeded();
+      }, 1350);
+    }
+
+    function syncPanZonesDuringTilt() {
+      stopPanZoneSync();
+      const tick = () => {
+        positionPanZones();
+        if (state.isAnimating) {
+          state.panSyncFrame = window.requestAnimationFrame(tick);
+        }
+      };
+      state.panSyncFrame = window.requestAnimationFrame(tick);
+    }
+
+    function stopPanZoneSync() {
+      if (state.panSyncFrame !== null) {
+        window.cancelAnimationFrame(state.panSyncFrame);
+        state.panSyncFrame = null;
+      }
+    }
+
+    function revealResult(correct) {
+      state.gameOver = true;
+      updateWeighButtonState();
+      const fakeStatement = `Coin ${state.fakeCoin} was the fake coin, and it was ${state.fakeDirection}.`;
+      resultTitle.textContent = correct ? "You Solved It" : "Not Quite";
+      resultBody.innerHTML = correct
+        ? `Your deduction was correct. <span class="result-highlight">${fakeStatement}</span>`
+        : `Your guess missed the mark. <span class="result-highlight">${fakeStatement}</span>`;
+      resultOverlay.classList.add("visible");
+      resultOverlay.setAttribute("aria-hidden", "false");
+    }
+
+    function submitGuess() {
+      if (state.weighingsUsed < 3 || state.gameOver) {
+        return;
+      }
+      const chosenCoin = Number(guessCoin.value);
+      const chosenDirection = document.querySelector('input[name="guessWeight"]:checked').value;
+      const correct = chosenCoin === state.fakeCoin && chosenDirection === state.fakeDirection;
+      revealResult(correct);
+    }
+
+    function positionPanZones() {
+      const wrapRect = scaleWrap.getBoundingClientRect();
+      placeZone(zoneShells.left, wrapRect, "left");
+      placeZone(zoneShells.right, wrapRect, "right");
+    }
+
+    function placeZone(zone, wrapRect, side) {
+      const gutter = Math.min(18, wrapRect.width * 0.02);
+      const width = Math.max((wrapRect.width / 2) - (gutter * 1.5), 160);
+      const height = Math.max(wrapRect.height - 6, 220);
+      zone.style.width = `${width}px`;
+      zone.style.height = `${height}px`;
+      zone.style.top = `0px`;
+      zone.style.left = side === "left" ? `0px` : `${wrapRect.width - width}px`;
+    }
+
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function resetGame() {
+      state.fakeCoin = randomInt(1, 12);
+      state.fakeDirection = Math.random() > 0.5 ? "heavier" : "lighter";
+      state.weighingsUsed = 0;
+      state.log = [];
+      state.draggingCoinId = null;
+      state.dragOriginZone = null;
+      state.dropHandled = false;
+      state.selectedCoinId = null;
+      state.isAnimating = false;
+      stopPanZoneSync();
+      state.gameOver = false;
+      state.zones = {
+        tray: Array.from({ length: 12 }, (_, index) => index + 1),
+        left: [],
+        right: [],
+        aside1: [],
+        aside2: []
+      };
+
+      resultOverlay.classList.remove("visible");
+      resultOverlay.setAttribute("aria-hidden", "true");
+      guessPanel.classList.remove("visible");
+      renderPips();
+      renderZones();
+      renderLog();
+      renderScaleOutcome(null);
+      setScaleTilt("balanced");
+      updateWeighButtonState();
+      positionPanZones();
+      tapTip.hidden = !window.matchMedia("(hover: none), (pointer: coarse)").matches;
+    }
+
+    weighBtn.addEventListener("click", weighCoins);
+    returnScaleBtn.addEventListener("click", returnScaleToTray);
+    returnZone1Btn.addEventListener("click", () => returnZoneToTray("aside1"));
+    returnZone2Btn.addEventListener("click", () => returnZoneToTray("aside2"));
+    submitGuessBtn.addEventListener("click", submitGuess);
+    document.getElementById("newGameBtn").addEventListener("click", resetGame);
+    document.getElementById("playAgainBtn").addEventListener("click", resetGame);
+    window.addEventListener("resize", positionPanZones);
+
+    buildGuessOptions();
+    registerZoneEvents();
+    resetGame();
+
+    // Reposition once fonts and layout settle so the pan hit areas stay aligned to the SVG artwork.
+    window.addEventListener("load", positionPanZones);
+  </script>
+</body>
+</html>
