@@ -2,12 +2,6 @@
 
 A polished interactive version of the classic twelve coin logic puzzle: use three weighings to find the fake coin and determine whether it is heavier or lighter.
 
-## Play
-
-Open [index.html](/Users/nicolasgrineberg/Documents/Playground/index.html) in any modern browser.
-
-No install, build step, or dependencies required.
-
 ## How It Works
 
 - Drag coins between the main tray, the scale, and the logic zones
@@ -26,10 +20,3 @@ No install, build step, or dependencies required.
 - Final reveal screen
 - Responsive dark puzzle-game UI
 
-## Sharing
-
-This project can be shared easily by:
-
-- Sending the `index.html` file directly
-- Uploading it to GitHub Pages
-- Hosting it on any static site platform like Netlify or Vercel
